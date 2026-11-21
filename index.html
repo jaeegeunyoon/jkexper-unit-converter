@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JKeXper Unit Converter - 공학 단위 환산기</title>
+<meta name="description" content="기계·유체·열 공학용 단위 환산기. 31종 도량형, 270개 단위를 한 번에 환산합니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== JKeXper design tokens (JKeXper Viewer 기준) ===== */
+:root{
+  --bg:#E4E9EE; --panel:#F5F7F9; --panel-2:#EBEFF3; --ink:#18232E; --muted:#5A6875; --line:#C9D2DA;
+  --accent:#1F4FB8; --accent-soft:rgba(31,79,184,.12); --warn:#B36F00; --danger:#B3261E;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#151B21; --panel:#1C242C; --panel-2:#222C35; --ink:#DDE5EC; --muted:#8C9AA7; --line:#2F3A45;
+    --accent:#7AA3FF; --accent-soft:rgba(122,163,255,.16); --warn:#F2B33D; --danger:#FF8A80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151B21; --panel:#1C242C; --panel-2:#222C35; --ink:#DDE5EC; --muted:#8C9AA7; --line:#2F3A45;
+  --accent:#7AA3FF; --accent-soft:rgba(122,163,255,.16); --warn:#F2B33D; --danger:#FF8A80; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.45;
+  font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:300px 1fr;height:100%;min-height:0}
+
+/* ----- 좌측 패널 ----- */
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.brand h1{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.tree-tools{padding:10px 12px 4px}
+.tree-tools input{width:100%;font:inherit;font-size:13px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:6px 9px}
+.tree-wrap{flex:1;overflow:auto;padding:4px 8px 12px;min-height:120px}
+.gh{font-size:12.5px;font-weight:600;color:var(--muted);margin:12px 10px 4px}
+.row{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:5px;cursor:pointer;white-space:nowrap}
+.row:hover{background:var(--panel-2)}
+.row.sel{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.row .nm{overflow:hidden;text-overflow:ellipsis;flex:1}
+.row .cnt{flex:none;font-size:11px;color:var(--muted);background:var(--panel-2);border-radius:8px;padding:0 6px}
+.row.sel .cnt{background:transparent;color:var(--accent)}
+.copy{padding:10px 18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+
+/* ----- 메인 ----- */
+main{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+.grp{display:flex;align-items:center;gap:4px}
+.grp>span{color:var(--muted);font-size:12px;margin-right:4px}
+button,select{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 9px;cursor:pointer}
+button:hover{background:var(--panel-2)}
+button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.primary{background:var(--accent);color:#fff}
+.primary:hover{background:color-mix(in srgb,var(--accent) 85%,#000)}
+select{border-color:var(--line);padding:5px 7px;background:var(--panel-2)}
+.valin{font:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:4px 10px;width:190px;text-align:right}
+.seg{background:var(--panel-2);border-radius:8px;padding:2px;gap:0}
+.seg button{padding:3px 10px;border-radius:6px}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);border-color:var(--line);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.sp{flex:1}
+.heading{display:flex;align-items:baseline;gap:10px;padding:14px 16px 6px}
+.heading h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.heading small{color:var(--muted);font-size:12.5px}
+.recent{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 8px;min-height:6px;font-size:12px;color:var(--muted);align-items:center}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:1px 9px;border-radius:8px;cursor:pointer;font-size:12px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.tbl{flex:1;min-height:0;overflow:auto;margin:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{width:100%;border-collapse:collapse}
+th{position:sticky;top:0;background:var(--panel-2);text-align:left;font-size:12.5px;font-weight:600;color:var(--muted);padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 12px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:var(--panel-2)}
+tr.src td{background:var(--accent-soft)}
+tr.src td.n{color:var(--accent);font-weight:500}
+td.idx{width:52px;color:var(--muted);text-align:center}
+td.n{width:36%;cursor:pointer}
+td.v{font-size:15px;cursor:pointer;word-break:break-all}
+td.v:hover{color:var(--accent)}
+td.i{width:44px;text-align:center;color:var(--muted);cursor:pointer;user-select:none}
+td.i.f{color:var(--warn)}
+.status{display:flex;gap:18px;flex-wrap:wrap;padding:5px 12px;background:var(--panel);border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;min-height:28px;margin-top:12px}
+.status b{color:var(--ink);font-weight:500}
+.toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:6px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none;font-size:13px;z-index:9}
+.toast.show{opacity:1}
+
+/* ----- 계산기 패널 (뷰어의 측정 패널과 동일 톤) ----- */
+#calc{position:absolute;right:24px;bottom:48px;width:262px;max-width:calc(100% - 24px);background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:10px 14px 12px;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:3;display:none}
+#calc.open{display:block}
+#calc h4{margin:-4px -6px 8px;padding:4px 6px;font-size:13px;font-weight:600;cursor:grab;display:flex;justify-content:space-between;border-radius:6px;user-select:none;touch-action:none}
+#calc h4:hover{background:var(--panel-2)}
+#calc h4 .x{color:var(--muted);cursor:pointer;padding:0 4px}
+#expr{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:5px 9px;text-align:right}
+#res{text-align:right;font-size:20px;font-weight:600;padding:8px 2px;min-height:40px;color:var(--accent);word-break:break-all}
+#keys{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+#keys button{padding:7px 0;border:1px solid var(--line);background:var(--panel-2)}
+#keys button:hover{border-color:var(--accent)}
+#keys .op{color:var(--accent)}
+#calc .apply{width:100%;margin-top:8px;padding:7px}
+
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  aside{border-right:0;border-bottom:1px solid var(--line);max-height:34vh}
+  .valin{width:140px}
+  .copy{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><h1>JKeXper Unit Converter</h1><p id="count">공학 단위 환산기</p></div>
+    <div class="tree-tools"><input id="search" placeholder="도량형 검색 (예: 압력, 토크)" autocomplete="off"></div>
+    <div class="tree-wrap" id="cats"></div>
+    <div class="copy">© 2026 Jaegeun Yoon. All rights reserved.</div>
+  </aside>
+  <main>
+    <div class="toolbar">
+      <div class="grp"><span>값</span><input class="valin" id="val" value="1" inputmode="decimal" autocomplete="off" aria-label="변환 전 값"></div>
+      <div class="grp"><span>단위</span><select id="from" aria-label="변환 전 단위"></select></div>
+      <div class="grp"><span>유효숫자</span>
+        <div class="grp seg" id="prec"><button data-p="6" aria-pressed="false">6</button><button data-p="10" aria-pressed="true">10</button><button data-p="15" aria-pressed="false">15</button></div></div>
+      <div class="sp"></div>
+      <button id="calcBtn" aria-pressed="false">계산기</button>
+      <button id="themeBtn">테마</button>
+    </div>
+    <div class="heading"><h2 id="title"></h2><small id="base"></small></div>
+    <div class="recent" id="recent"></div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>순번</th><th>단위</th><th>환산 결과값</th><th>★</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="status"><span>단위 행 클릭: <b>변환 전 단위 선택</b></span><span>결과값 클릭: <b>복사</b></span><span>★: <b>즐겨찾기(상단 고정)</b></span></div>
+
+    <div id="calc">
+      <h4 id="calcHd"><span>계산기</span><span class="x" id="calcX">✕</span></h4>
+      <input id="expr" placeholder="예: 25.4*3/2" autocomplete="off">
+      <div id="res">0</div>
+      <div id="keys"></div>
+      <button class="primary apply" id="apply">결과를 변환 전 값에 적용</button>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = [{"id":"length","name":"길이","group":"기본 도량형","base":"m","units":[{"n":"m (meter)","f":1,"o":0},{"n":"mm","f":0.001,"o":0},{"n":"cm","f":0.01,"o":0},{"n":"km","f":1000.0,"o":0},{"n":"μm","f":1e-06,"o":0},{"n":"nm","f":1e-09,"o":0},{"n":"in (inch)","f":0.0254,"o":0},{"n":"ft (feet)","f":0.3048,"o":0},{"n":"yd (yard)","f":0.9144,"o":0},{"n":"mil","f":2.54e-05,"o":0},{"n":"mi (mile)","f":1609.344,"o":0},{"n":"nmi (해리)","f":1852,"o":0},{"n":"Å (Angstrom)","f":1e-10,"o":0}]},{"id":"area","name":"면적","group":"기본 도량형","base":"m²","units":[{"n":"m²","f":1,"o":0},{"n":"mm²","f":1e-06,"o":0},{"n":"cm²","f":0.0001,"o":0},{"n":"km²","f":1000000.0,"o":0},{"n":"ha (헥타르)","f":10000.0,"o":0},{"n":"a (아르)","f":100,"o":0},{"n":"in²","f":0.00064516,"o":0},{"n":"ft²","f":0.09290304,"o":0},{"n":"yd²","f":0.83612736,"o":0},{"n":"acre","f":4046.8564224,"o":0},{"n":"mi²","f":2589988.110336,"o":0},{"n":"평","f":3.3057851239669422,"o":0}]},{"id":"volume","name":"체적","group":"기본 도량형","base":"m³","units":[{"n":"m³","f":1,"o":0},{"n":"L (liter)","f":0.001,"o":0},{"n":"mL (cc)","f":1e-06,"o":0},{"n":"cm³","f":1e-06,"o":0},{"n":"mm³","f":1e-09,"o":0},{"n":"in³","f":1.6387064e-05,"o":0},{"n":"ft³","f":0.028316846592,"o":0},{"n":"yd³","f":0.764554857984,"o":0},{"n":"gal (US)","f":0.003785411784,"o":0},{"n":"gal (UK)","f":0.00454609,"o":0},{"n":"qt (US)","f":0.000946352946,"o":0},{"n":"pt (US)","f":0.000473176473,"o":0},{"n":"fl oz (US)","f":2.95735295625e-05,"o":0},{"n":"bbl (석유)","f":0.158987294928,"o":0}]},{"id":"mass","name":"질량","group":"기본 도량형","base":"kg","units":[{"n":"kg","f":1,"o":0},{"n":"g","f":0.001,"o":0},{"n":"mg","f":1e-06,"o":0},{"n":"t (톤)","f":1000.0,"o":0},{"n":"lb","f":0.45359237,"o":0},{"n":"oz","f":0.028349523125,"o":0},{"n":"slug","f":14.5939029372,"o":0},{"n":"grain","f":6.479891e-05,"o":0},{"n":"ton (US short)","f":907.18474,"o":0},{"n":"ton (UK long)","f":1016.0469088,"o":0},{"n":"근 (600g)","f":0.6,"o":0}]},{"id":"time","name":"시간","group":"기본 도량형","base":"s","units":[{"n":"s (초)","f":1,"o":0},{"n":"ms","f":0.001,"o":0},{"n":"μs","f":1e-06,"o":0},{"n":"min (분)","f":60,"o":0},{"n":"h (시간)","f":3600,"o":0},{"n":"day (일)","f":86400,"o":0},{"n":"week (주)","f":604800,"o":0},{"n":"year (365일)","f":31536000,"o":0}]},{"id":"speed","name":"속도","group":"기본 도량형","base":"m/s","units":[{"n":"m/s","f":1,"o":0},{"n":"km/h","f":0.2777777777777778,"o":0},{"n":"mm/s","f":0.001,"o":0},{"n":"m/min","f":0.016666666666666666,"o":0},{"n":"cm/s","f":0.01,"o":0},{"n":"mph","f":0.44704,"o":0},{"n":"ft/s","f":0.3048,"o":0},{"n":"in/s","f":0.0254,"o":0},{"n":"knot (노트)","f":0.5144444444444445,"o":0}]},{"id":"acceleration","name":"가속도","group":"기본 도량형","base":"m/s²","units":[{"n":"m/s²","f":1,"o":0},{"n":"mm/s²","f":0.001,"o":0},{"n":"cm/s² (Gal)","f":0.01,"o":0},{"n":"g (표준중력)","f":9.80665,"o":0},{"n":"ft/s²","f":0.3048,"o":0},{"n":"in/s²","f":0.0254,"o":0}]},{"id":"angle","name":"각도","group":"기본 도량형","base":"deg","units":[{"n":"deg (도)","f":1,"o":0},{"n":"rad","f":57.29577951308232,"o":0},{"n":"mrad","f":0.057295779513082325,"o":0},{"n":"grad (gon)","f":0.9,"o":0},{"n":"rev (회전)","f":360,"o":0},{"n":"arcmin (분)","f":0.016666666666666666,"o":0},{"n":"arcsec (초)","f":0.0002777777777777778,"o":0}]},{"id":"angvel","name":"각속도","group":"기본 도량형","base":"rad/s","units":[{"n":"rad/s","f":1,"o":0},{"n":"rpm","f":0.10471975511965977,"o":0},{"n":"deg/s","f":0.017453292519943295,"o":0},{"n":"rev/s (rps)","f":6.283185307179586,"o":0},{"n":"deg/min","f":0.0002908882086657216,"o":0},{"n":"rad/min","f":0.016666666666666666,"o":0}]},{"id":"force","name":"힘","group":"기계 / 물리","base":"N","units":[{"n":"N","f":1,"o":0},{"n":"kN","f":1000.0,"o":0},{"n":"MN","f":1000000.0,"o":0},{"n":"mN","f":0.001,"o":0},{"n":"dyn","f":1e-05,"o":0},{"n":"kgf","f":9.80665,"o":0},{"n":"gf","f":0.00980665,"o":0},{"n":"lbf","f":4.4482216152605,"o":0},{"n":"ozf","f":0.27801385095378,"o":0},{"n":"tonf (US)","f":8896.443230521,"o":0}]},{"id":"torque","name":"토크 / 모멘트","group":"기계 / 물리","base":"N·m","units":[{"n":"N·m","f":1,"o":0},{"n":"N·cm","f":0.01,"o":0},{"n":"N·mm","f":0.001,"o":0},{"n":"kN·m","f":1000.0,"o":0},{"n":"kgf·m","f":9.80665,"o":0},{"n":"kgf·cm","f":0.0980665,"o":0},{"n":"gf·cm","f":9.80665e-05,"o":0},{"n":"lbf·ft","f":1.3558179483314,"o":0},{"n":"lbf·in","f":0.1129848290276,"o":0},{"n":"ozf·in","f":0.0070615518,"o":0},{"n":"dyn·cm","f":1e-07,"o":0}]},{"id":"pressure","name":"압력 / 응력","group":"기계 / 물리","base":"Pa","units":[{"n":"Pa","f":1,"o":0},{"n":"kPa","f":1000.0,"o":0},{"n":"MPa (N/mm²)","f":1000000.0,"o":0},{"n":"GPa","f":1000000000.0,"o":0},{"n":"bar","f":100000.0,"o":0},{"n":"mbar (hPa)","f":100,"o":0},{"n":"atm","f":101325,"o":0},{"n":"kgf/cm² (at)","f":98066.5,"o":0},{"n":"kgf/m²","f":9.80665,"o":0},{"n":"mmHg","f":133.322387415,"o":0},{"n":"Torr","f":133.32236842105263,"o":0},{"n":"inHg","f":3386.389,"o":0},{"n":"psi","f":6894.757293168,"o":0},{"n":"ksi","f":6894757.293168,"o":0},{"n":"mmH₂O","f":9.80665,"o":0},{"n":"inH₂O","f":249.0889,"o":0}]},{"id":"energy","name":"에너지 / 일","group":"기계 / 물리","base":"J","units":[{"n":"J","f":1,"o":0},{"n":"kJ","f":1000.0,"o":0},{"n":"MJ","f":1000000.0,"o":0},{"n":"GJ","f":1000000000.0,"o":0},{"n":"mJ","f":0.001,"o":0},{"n":"Wh","f":3600,"o":0},{"n":"kWh","f":3600000.0,"o":0},{"n":"cal (열화학)","f":4.184,"o":0},{"n":"kcal","f":4184,"o":0},{"n":"BTU (IT)","f":1055.05585262,"o":0},{"n":"ft·lbf","f":1.3558179483314,"o":0},{"n":"kgf·m","f":9.80665,"o":0},{"n":"hp·h","f":2684519.537696,"o":0},{"n":"erg","f":1e-07,"o":0},{"n":"eV","f":1.602176634e-19,"o":0}]},{"id":"power","name":"동력 / 일률","group":"기계 / 물리","base":"W","units":[{"n":"W","f":1,"o":0},{"n":"kW","f":1000.0,"o":0},{"n":"MW","f":1000000.0,"o":0},{"n":"mW","f":0.001,"o":0},{"n":"hp (영국마력)","f":745.69987158,"o":0},{"n":"PS (미터마력)","f":735.49875,"o":0},{"n":"kgf·m/s","f":9.80665,"o":0},{"n":"ft·lbf/s","f":1.3558179483314,"o":0},{"n":"BTU/h","f":0.29307107,"o":0},{"n":"kcal/h","f":1.162222,"o":0},{"n":"RT (냉동톤)","f":3516.8525,"o":0}]},{"id":"inertia","name":"관성모멘트","group":"기계 / 물리","base":"kg·m²","units":[{"n":"kg·m²","f":1,"o":0},{"n":"g·cm²","f":1e-07,"o":0},{"n":"kg·cm²","f":0.0001,"o":0},{"n":"kgf·m·s²","f":9.80665,"o":0},{"n":"lb·ft²","f":0.0421401100938,"o":0},{"n":"lb·in²","f":0.000292639653,"o":0},{"n":"oz·in²","f":1.82899783e-05,"o":0}]},{"id":"density","name":"밀도","group":"기계 / 물리","base":"kg/m³","units":[{"n":"kg/m³","f":1,"o":0},{"n":"g/cm³","f":1000.0,"o":0},{"n":"g/L","f":1,"o":0},{"n":"kg/L","f":1000.0,"o":0},{"n":"t/m³","f":1000.0,"o":0},{"n":"mg/mL","f":1,"o":0},{"n":"lb/ft³","f":16.018463374,"o":0},{"n":"lb/in³","f":27679.9047102,"o":0},{"n":"lb/gal (US)","f":119.826427317,"o":0},{"n":"slug/ft³","f":515.378818,"o":0}]},{"id":"spweight","name":"비중량","group":"기계 / 물리","base":"N/m³","units":[{"n":"N/m³","f":1,"o":0},{"n":"kN/m³","f":1000.0,"o":0},{"n":"kgf/m³","f":9.80665,"o":0},{"n":"gf/cm³","f":9806.65,"o":0},{"n":"lbf/ft³","f":157.087464,"o":0},{"n":"lbf/in³","f":271447.138,"o":0},{"n":"dyn/cm³","f":10,"o":0}]},{"id":"volflow","name":"체적유량","group":"유체","base":"m³/s","units":[{"n":"m³/s","f":1,"o":0},{"n":"m³/min","f":0.016666666666666666,"o":0},{"n":"m³/h","f":0.0002777777777777778,"o":0},{"n":"L/s","f":0.001,"o":0},{"n":"L/min (LPM)","f":1.6666666666666667e-05,"o":0},{"n":"L/h","f":2.7777777777777776e-07,"o":0},{"n":"mL/min (cc/min)","f":1.6666666666666667e-08,"o":0},{"n":"cm³/s","f":1e-06,"o":0},{"n":"mm³/s","f":1e-09,"o":0},{"n":"ft³/s","f":0.028316846592,"o":0},{"n":"ft³/min (CFM)","f":0.0004719474432,"o":0},{"n":"gal/min (GPM, US)","f":6.30901964e-05,"o":0},{"n":"bbl/day","f":1.8401307283333336e-06,"o":0}]},{"id":"massflow","name":"질량유량","group":"유체","base":"kg/s","units":[{"n":"kg/s","f":1,"o":0},{"n":"kg/min","f":0.016666666666666666,"o":0},{"n":"kg/h","f":0.0002777777777777778,"o":0},{"n":"g/s","f":0.001,"o":0},{"n":"g/min","f":1.6666666666666667e-05,"o":0},{"n":"t/h","f":0.2777777777777778,"o":0},{"n":"lb/s","f":0.45359237,"o":0},{"n":"lb/min","f":0.007559872833333333,"o":0},{"n":"lb/h","f":0.00012599788055555556,"o":0}]},{"id":"dynvisc","name":"점성계수 (동적점도)","group":"유체","base":"Pa·s","units":[{"n":"Pa·s (N·s/m²)","f":1,"o":0},{"n":"mPa·s","f":0.001,"o":0},{"n":"μPa·s","f":1e-06,"o":0},{"n":"cP (센티푸아즈)","f":0.001,"o":0},{"n":"P (푸아즈)","f":0.1,"o":0},{"n":"kgf·s/m²","f":9.80665,"o":0},{"n":"lbf·s/ft²","f":47.88025898,"o":0},{"n":"lb/(ft·s)","f":1.488163944,"o":0},{"n":"lb/(ft·h)","f":0.00041337887333333333,"o":0}]},{"id":"kinvisc","name":"동점성계수","group":"유체","base":"m²/s","units":[{"n":"m²/s","f":1,"o":0},{"n":"m²/h","f":0.0002777777777777778,"o":0},{"n":"cm²/s (St)","f":0.0001,"o":0},{"n":"mm²/s (cSt)","f":1e-06,"o":0},{"n":"ft²/s","f":0.09290304,"o":0},{"n":"ft²/h","f":2.58064e-05,"o":0},{"n":"in²/s","f":0.00064516,"o":0}]},{"id":"surftens","name":"표면장력","group":"유체","base":"N/m","units":[{"n":"N/m","f":1,"o":0},{"n":"mN/m","f":0.001,"o":0},{"n":"dyn/cm","f":0.001,"o":0},{"n":"gf/cm","f":0.980665,"o":0},{"n":"kgf/m","f":9.80665,"o":0},{"n":"lbf/ft","f":14.5939029,"o":0},{"n":"lbf/in","f":175.126835,"o":0}]},{"id":"bulkmod","name":"체적탄성계수 / 압축률","group":"유체","base":"Pa","units":[{"n":"Pa","f":1,"o":0},{"n":"kPa","f":1000.0,"o":0},{"n":"MPa","f":1000000.0,"o":0},{"n":"GPa","f":1000000000.0,"o":0},{"n":"bar","f":100000.0,"o":0},{"n":"kgf/cm²","f":98066.5,"o":0},{"n":"psi","f":6894.757293168,"o":0}]},{"id":"temperature","name":"온도","group":"열 / 열역학","base":"°C","units":[{"n":"°C (섭씨)","f":1,"o":0},{"n":"K (켈빈)","f":1,"o":-273.15},{"n":"°F (화씨)","f":0.5555555555555556,"o":-17.77777777777778},{"n":"°R (랭킨)","f":0.5555555555555556,"o":-273.15}]},{"id":"tempdiff","name":"온도차","group":"열 / 열역학","base":"K","units":[{"n":"K","f":1,"o":0},{"n":"°C","f":1,"o":0},{"n":"°F","f":0.5555555555555556,"o":0},{"n":"°R","f":0.5555555555555556,"o":0}]},{"id":"thermcond","name":"열전도율","group":"열 / 열역학","base":"W/(m·K)","units":[{"n":"W/(m·K)","f":1,"o":0},{"n":"kW/(m·K)","f":1000.0,"o":0},{"n":"W/(cm·K)","f":100,"o":0},{"n":"cal/(s·cm·°C)","f":418.4,"o":0},{"n":"kcal/(h·m·°C)","f":1.162222,"o":0},{"n":"BTU/(h·ft·°F)","f":1.730734667,"o":0},{"n":"BTU·in/(h·ft²·°F)","f":0.14422789,"o":0}]},{"id":"specheat","name":"비열 / 비엔트로피","group":"열 / 열역학","base":"J/(kg·K)","units":[{"n":"J/(kg·K)","f":1,"o":0},{"n":"kJ/(kg·K)","f":1000.0,"o":0},{"n":"J/(g·K)","f":1000.0,"o":0},{"n":"cal/(g·°C)","f":4184,"o":0},{"n":"kcal/(kg·°C)","f":4184,"o":0},{"n":"BTU/(lb·°F)","f":4186.8,"o":0}]},{"id":"specenth","name":"비엔탈피 (질량당 에너지)","group":"열 / 열역학","base":"J/kg","units":[{"n":"J/kg","f":1,"o":0},{"n":"kJ/kg","f":1000.0,"o":0},{"n":"MJ/kg","f":1000000.0,"o":0},{"n":"J/g","f":1000.0,"o":0},{"n":"cal/g","f":4184,"o":0},{"n":"kcal/kg","f":4184,"o":0},{"n":"BTU/lb","f":2326,"o":0}]},{"id":"htc","name":"열전달계수","group":"열 / 열역학","base":"W/(m²·K)","units":[{"n":"W/(m²·K)","f":1,"o":0},{"n":"kW/(m²·K)","f":1000.0,"o":0},{"n":"cal/(s·cm²·°C)","f":41840,"o":0},{"n":"kcal/(h·m²·°C)","f":1.162222,"o":0},{"n":"BTU/(h·ft²·°F)","f":5.678263341,"o":0}]},{"id":"heatflux","name":"열유속","group":"열 / 열역학","base":"W/m²","units":[{"n":"W/m²","f":1,"o":0},{"n":"kW/m²","f":1000.0,"o":0},{"n":"W/cm²","f":10000.0,"o":0},{"n":"cal/(s·cm²)","f":41840,"o":0},{"n":"kcal/(h·m²)","f":1.162222,"o":0},{"n":"BTU/(h·ft²)","f":3.15459075,"o":0}]},{"id":"diffus","name":"열확산계수 / 확산계수","group":"열 / 열역학","base":"m²/s","units":[{"n":"m²/s","f":1,"o":0},{"n":"cm²/s","f":0.0001,"o":0},{"n":"mm²/s","f":1e-06,"o":0},{"n":"m²/h","f":0.0002777777777777778,"o":0},{"n":"ft²/s","f":0.09290304,"o":0},{"n":"ft²/h","f":2.58064e-05,"o":0}]}];
+/* 저장소: localStorage 불가(iframe 제한 등) 시 메모리로 대체 */
+const store=(()=>{const mem={};let ls=null;try{ls=window.localStorage;ls.setItem('_t',1);ls.removeItem('_t')}catch(e){ls=null}
+  return {get(k,d){try{const v=ls?ls.getItem(k):mem[k];return v==null?d:JSON.parse(v)}catch(e){return d}},
+          set(k,v){try{const s=JSON.stringify(v);ls?ls.setItem(k,s):mem[k]=s}catch(e){}}}})();
+const $=id=>document.getElementById(id);
+let cat=DATA[0], fromIdx=0, sig=10;
+let favs=store.get('uc_favs',{}), recents=store.get('uc_recent',[]);
+
+function fmt(x,n){
+  if(!isFinite(x))return '—'; if(x===0)return '0';
+  const a=Math.abs(x);
+  if(a>=1e12||a<1e-4){let [m,e]=x.toExponential(n-1).split('e'); if(m.includes('.'))m=m.replace(/0+$/,'').replace(/\.$/,'');
+    return m+'E'+(e[0]==='-'?'-':'+')+e.replace(/^[+-]/,'').padStart(3,'0')}
+  let s=Number(x.toPrecision(n)).toString(); if(s.includes('e'))s=x.toFixed(10).replace(/0+$/,'').replace(/\.$/,''); return s;
+}
+function parseVal(s){s=s.trim().replace(/,/g,'');if(s===''||s==='-')return NaN;return Number(s)}
+
+function renderCats(){
+  const q=$('search').value.trim().toLowerCase();let html='',last='';
+  DATA.forEach(c=>{
+    if(q&&!(c.name.toLowerCase().includes(q)||c.id.includes(q)||c.base.toLowerCase().includes(q)))return;
+    if(c.group!==last){html+=`<div class="gh">${c.group}</div>`;last=c.group}
+    html+=`<div class="row ${c.id===cat.id?'sel':''}" data-id="${c.id}"><span class="nm">${c.name}</span><span class="cnt">${c.units.length}</span></div>`;
+  });
+  $('cats').innerHTML=html||'<div class="gh">검색 결과 없음</div>';
+}
+function renderHead(){
+  $('title').textContent=cat.name; $('base').textContent='기준단위 '+cat.base;
+  $('from').innerHTML=cat.units.map((u,i)=>`<option value="${i}">${u.n}</option>`).join(''); $('from').value=fromIdx;
+}
+function renderRecent(){
+  $('recent').innerHTML=recents.length?'최근 '+recents.map((r,k)=>{const c=DATA.find(x=>x.id===r.c);
+    return c?`<span class="chip" data-k="${k}">${c.name} · ${c.units[r.i].n}</span>`:''}).join(''):'';
+}
+function renderTable(){
+  const v=parseVal($('val').value), u=cat.units[fromIdx], base=v*u.f+u.o, fv=new Set(favs[cat.id]||[]);
+  const order=cat.units.map((x,i)=>i).sort((a,b)=>(fv.has(cat.units[b].n)-fv.has(cat.units[a].n))||a-b);
+  $('tbody').innerHTML=order.map((i,r)=>{const x=cat.units[i],val=(base-x.o)/x.f;
+    return `<tr class="${i===fromIdx?'src':''}"><td class="idx">${r+1}</td><td class="n" data-i="${i}">${x.n}</td>
+    <td class="v">${isNaN(v)?'—':fmt(val,sig)}</td><td class="i ${fv.has(x.n)?'f':''}" data-n="${x.n}">${fv.has(x.n)?'★':'☆'}</td></tr>`}).join('');
+}
+function selectCat(id){cat=DATA.find(c=>c.id===id);fromIdx=0;store.set('uc_last',id);renderCats();renderHead();renderTable()}
+function pushRecent(){recents=[{c:cat.id,i:fromIdx},...recents.filter(r=>!(r.c===cat.id&&r.i===fromIdx))].slice(0,6);store.set('uc_recent',recents);renderRecent()}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),1300)}
+function copyText(t){
+  const ok=()=>toast('복사됨: '+t);
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok,()=>fb(t))}else fb(t);
+  function fb(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){toast('복사 실패')}a.remove()}
+}
+
+$('cats').onclick=e=>{const r=e.target.closest('.row');if(r)selectCat(r.dataset.id)};
+$('search').oninput=renderCats;
+$('val').oninput=renderTable;
+$('prec').onclick=e=>{const b=e.target.closest('button');if(!b)return;sig=+b.dataset.p;[...$('prec').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderTable()};
+$('from').onchange=()=>{fromIdx=+$('from').value;renderTable();pushRecent()};
+$('tbody').onclick=e=>{
+  const n=e.target.closest('td.n'),v=e.target.closest('td.v'),s=e.target.closest('td.i');
+  if(n){fromIdx=+n.dataset.i;$('from').value=fromIdx;renderTable();pushRecent()}
+  else if(v){if(v.textContent!=='—')copyText(v.textContent)}
+  else if(s){const a=favs[cat.id]=favs[cat.id]||[],k=a.indexOf(s.dataset.n);k<0?a.push(s.dataset.n):a.splice(k,1);store.set('uc_favs',favs);renderTable()}
+};
+$('recent').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;const r=recents[+c.dataset.k];cat=DATA.find(x=>x.id===r.c);fromIdx=r.i;renderCats();renderHead();renderTable()};
+
+/* 테마: 시스템 설정 따름, 버튼으로 수동 전환 */
+function isDark(){return document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches}
+function applyTheme(t){if(t)document.documentElement.dataset.theme=t;$('themeBtn').textContent=isDark()?'라이트 모드':'다크 모드'}
+$('themeBtn').onclick=()=>{const t=isDark()?'light':'dark';store.set('uc_theme',t);applyTheme(t)};
+
+/* 계산기 (eval 미사용) */
+function calcEval(src){
+  const s=src.replace(/×/g,'*').replace(/÷/g,'/').replace(/\s+/g,'');let p=0;
+  const F={sqrt:Math.sqrt,sin:x=>Math.sin(x*Math.PI/180),cos:x=>Math.cos(x*Math.PI/180),tan:x=>Math.tan(x*Math.PI/180),ln:Math.log,log:Math.log10,abs:Math.abs};
+  const peek=()=>s[p];
+  function expr(){let v=term();while(peek()==='+'||peek()==='-'){const o=s[p++],r=term();v=o==='+'?v+r:v-r}return v}
+  function term(){let v=pow();while(peek()==='*'||peek()==='/'||peek()==='%'){const o=s[p++],r=pow();v=o==='*'?v*r:o==='/'?v/r:v%r}return v}
+  function pow(){const b=unary();if(peek()==='^'){p++;return Math.pow(b,pow())}return b}
+  function unary(){if(peek()==='-'){p++;return -unary()}if(peek()==='+'){p++;return unary()}return atom()}
+  function atom(){
+    if(peek()==='('){p++;const v=expr();if(peek()!==')')throw 0;p++;return v}
+    let m=/^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/.exec(s.slice(p));if(m){p+=m[0].length;return parseFloat(m[0])}
+    m=/^[a-zπ]+/i.exec(s.slice(p));if(!m)throw 0;const w=m[0].toLowerCase();p+=m[0].length;
+    if(w==='pi'||w==='π')return Math.PI;if(w==='e')return Math.E;
+    if(F[w]&&peek()==='('){p++;const v=expr();if(peek()!==')')throw 0;p++;return F[w](v)}throw 0}
+  const v=expr();if(p!==s.length)throw 0;return v;
+}
+let calcVal=NaN;
+function calcUpdate(){const t=$('expr').value;if(!t.trim()){$('res').textContent='0';calcVal=NaN;return}
+  try{calcVal=calcEval(t);$('res').textContent=isFinite(calcVal)?fmt(calcVal,12):'오류'}catch(e){calcVal=NaN;$('res').textContent='…'}}
+['7','8','9','÷','C','4','5','6','×','⌫','1','2','3','-','(','0','.','π','+',')','^','sqrt(','%','=','e'].forEach(k=>{
+  const b=document.createElement('button');b.textContent=k;if(['÷','×','-','+','^','%','=','sqrt('].includes(k))b.className='op';
+  b.onclick=()=>{const i=$('expr');
+    if(k==='C')i.value='';else if(k==='⌫')i.value=i.value.slice(0,-1);
+    else if(k==='='){calcUpdate();if(isFinite(calcVal))i.value=String(+calcVal.toPrecision(12))}else i.value+=k;
+    calcUpdate();i.focus()};$('keys').appendChild(b)});
+$('expr').oninput=calcUpdate;
+$('expr').onkeydown=e=>{if(e.key==='Enter'){calcUpdate();if(isFinite(calcVal))$('expr').value=String(+calcVal.toPrecision(12))}};
+function toggleCalc(on){$('calc').classList.toggle('open',on);$('calcBtn').setAttribute('aria-pressed',$('calc').classList.contains('open'))}
+$('calcBtn').onclick=()=>toggleCalc();$('calcX').onclick=()=>toggleCalc(false);
+$('apply').onclick=()=>{calcUpdate();if(isFinite(calcVal)){$('val').value=String(+calcVal.toPrecision(12));renderTable();toast('입력값에 적용됨')}};
+/* 계산기 패널 드래그 이동 */
+(()=>{const h=$('calcHd'),c=$('calc');let d=null;
+  h.onpointerdown=e=>{if(e.target.id==='calcX')return;const r=c.getBoundingClientRect(),m=c.parentElement.getBoundingClientRect();
+    d={x:e.clientX-r.left,y:e.clientY-r.top,mx:m.left,my:m.top};h.setPointerCapture(e.pointerId);h.style.cursor='grabbing'};
+  h.onpointermove=e=>{if(!d)return;c.style.left=(e.clientX-d.mx-d.x)+'px';c.style.top=(e.clientY-d.my-d.y)+'px';c.style.right='auto';c.style.bottom='auto'};
+  h.onpointerup=()=>{d=null;h.style.cursor=''}})();
+
+/* 시작 */
+$('count').textContent=`공학 단위 환산기 · ${DATA.length}종 ${DATA.reduce((a,c)=>a+c.units.length,0)}개 단위`;
+applyTheme(store.get('uc_theme',null));
+const last=DATA.find(c=>c.id===store.get('uc_last','length'));if(last)cat=last;
+renderCats();renderHead();renderTable();renderRecent();
+window.__test={DATA,fmt,calcEval,selectCat,setVal:v=>{$('val').value=v;renderTable()},setFrom:i=>{fromIdx=i;$('from').value=i;renderTable()}};
+</script>
+</body>
+</html>
